@@ -2,25 +2,13 @@
 #include "limits.h"
 #include "stdio.h"
 #include <stdlib.h>
+#include "common_functions.h"
 #define FPS 60
 #define REDTERM     "\033[31m"      /* Red */
 #define RESETTERM   "\033[0m"
 #define GREENTERM   "\033[32m"      /* Green */
-typedef enum  {
-    BALL,
-    CIRCLE,
-} Type;
-typedef struct
-{
-    int x_pos;
-    int y_pos;
-    int radius;
-    bool neg_width;
-    bool neg_height;
-    Color color;
-    int speed;
-    Type type;
-} Circle;
+
+
 
 
 typedef struct
@@ -65,30 +53,7 @@ void change_circle_color(Circle *circle)
 Vector2 window_size;
 
 
-Circle initialize_ball(int radius, int speed)
-{
 
-    Circle circle;
-    
-    circle.neg_height = false;
-    circle.neg_width = false;
-    circle.radius = GetRandomValue(5, 24);
-    circle.x_pos = GetRandomValue(1, window_size.x - circle.radius);
-    circle.y_pos = GetRandomValue(1, window_size.y - circle.radius);
-    if(circle.x_pos > window_size.x / 2){
-        circle.neg_width = true;
-    }
-    if(circle.y_pos > window_size.y / 2){
-        circle.neg_height = true;
-    }
-    circle.speed = GetRandomValue(3, 7);
-    Color color = {GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(200, 255)};
-    circle.color = color;
-    circle.type = GetRandomValue(0, 1);
-
-    return circle;
-
-}
 
 #define MAX_BALLS 1048576 // 2^20
 
@@ -97,53 +62,21 @@ Circle array_of_circles[MAX_BALLS];
 bool have_warned = false;
 void add_new_ball(void)
 {
-    int current_fps = GetFPS();
-    if(amount_of_circles < MAX_BALLS && current_fps >= 30){
-        array_of_circles[amount_of_circles] = initialize_ball(24,7);
-        amount_of_circles++;
-        // printf("Amount of balls: %i\n", amount_of_circles);
-    }else if(current_fps < 50){
-        amount_of_circles--;
-    }
-    else if(!have_warned){
-        printf(REDTERM "too many balls!!\n" RESETTERM);
-        have_warned = true;
-    }
-}
-
-void update_ball_position(Circle *circle, Vector2 *window_size)
-{
-    if(circle->x_pos >= window_size->x - circle->radius){
-            circle->neg_width = true;
-            change_circle_color(circle);
-            add_new_ball();
-        }else if(circle->x_pos <= 0 + circle->radius){
-            circle->neg_width = false;
-            change_circle_color(circle);
-            add_new_ball();
+        int current_fps = GetFPS();
+        if(amount_of_circles < MAX_BALLS && (current_fps > 30 || IsKeyDown(KEY_D))){
+            array_of_circles[amount_of_circles] = initialize_ball(&window_size);
+            amount_of_circles++;
+            // printf("Amount of balls: %i\n", amount_of_circles);
+        }else if(current_fps < 30 && !IsKeyDown(KEY_D)){
+            amount_of_circles--;
         }
-        if(circle->neg_width){
-            circle->x_pos -= circle->speed;
-        }else {
-            circle->x_pos += circle->speed;
-        }
-
-
-        if(circle->y_pos >= window_size->y - circle->radius){
-            circle->neg_height = true;
-            change_circle_color(circle);
-            add_new_ball();
-        }else if(circle->y_pos <= 0 + circle->radius){
-            circle->neg_height = false;
-            change_circle_color(circle);
-            add_new_ball();
-        }
-        if(circle->neg_height){
-            circle->y_pos -= circle->speed;
-        }else{
-            circle->y_pos += circle->speed;
+        else if(!have_warned){
+            printf(REDTERM "too many balls!!\n" RESETTERM);
+            have_warned = true;
         }
 }
+
+
 
 void draw_info(void)
 {
@@ -172,7 +105,7 @@ int main(void)
     window_size.y = GetMonitorHeight(current_monitor);
     SetWindowSize(window_size.x, window_size.y);
     ToggleFullscreen();
-    array_of_circles[0] = initialize_ball(24, 7);
+    array_of_circles[0] = initialize_ball(&window_size);
     bool enable_info_overlay = true;
     
     
@@ -180,9 +113,10 @@ int main(void)
     {
         if(IsKeyPressed(KEY_SPACE)){
             if(amount_of_circles < MAX_BALLS){
-                for(int i = 0;i <= 100 && amount_of_circles < MAX_BALLS; i++)
+                for(int i = 0;i <= 100 && amount_of_circles < MAX_BALLS; i++){
                     add_new_ball();
-                amount_of_circles++;
+                    amount_of_circles++;
+                }
                 printf("Amount of balls: %i\n", amount_of_circles);
             }
         }

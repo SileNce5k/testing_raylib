@@ -1,5 +1,5 @@
 #include "include/raylib.h"
-
+#include "common_functions.h"
 
 int main(void)
 {
