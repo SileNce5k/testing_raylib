@@ -1,10 +1,13 @@
 #pragma once
+#include <stdlib.h>
 #ifndef RAYLIB_H
 #include "include/raylib.h"
 #endif // RAYLIB_H
 typedef enum  {
     BALL,
     CIRCLE,
+    RECTANGLE,
+    STAR,
 } Type;
 typedef struct
 {
@@ -18,7 +21,6 @@ typedef struct
     Type type;
 } Circle;
 
+
+
 Circle initialize_ball(Vector2* window_size);
-void update_ball_position(Circle *circle, Vector2 *window_size);
-void change_circle_color(Circle *circle);
-void add_new_ball();

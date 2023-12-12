@@ -1,5 +1,8 @@
+#ifndef COMMON_FUNC_H
 #include "common_functions.h"
-Circle initialize_ball(Vector2 *window_size)
+#endif // COMMON_FUNC_H
+#define COMMON_FUNC_H
+Circle initialize_ball(Vector2 *window_size, Type_Amounts types)
 {
 
     Circle circle;
@@ -18,43 +21,33 @@ Circle initialize_ball(Vector2 *window_size)
     circle.speed = GetRandomValue(3, 7);
     Color color = {GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(200, 255)};
     circle.color = color;
-    circle.type = GetRandomValue(0, 1);
-
+    Type m_type;
+    m_type = GetRandomValue(0, 3);
+    circle.type = m_type;
+    /*
+        BALL,
+        CIRCLE,
+        RECTANGLE,
+        STAR,
+    */
+    switch (circle.type)
+    {
+    case BALL:
+        types.balls += 1;
+        break;
+    case CIRCLE:
+        types.circles += 1;
+        break;
+    case RECTANGLE:
+        types.squares += 1;
+        break;
+    case STAR:
+        types.stars += 1; 
+        break;
+    default:
+        break;
+    }
     return circle;
 
-}
-
-void update_ball_position(Circle *circle, Vector2 *window_size)
-{
-    if(circle->x_pos >= window_size->x - circle->radius){
-            circle->neg_width = true;
-            change_circle_color(circle);
-            add_new_ball();
-        }else if(circle->x_pos <= 0 + circle->radius){
-            circle->neg_width = false;
-            change_circle_color(circle);
-            add_new_ball();
-        }
-        if(circle->neg_width){
-            circle->x_pos -= circle->speed;
-        }else {
-            circle->x_pos += circle->speed;
-        }
-
-
-        if(circle->y_pos >= window_size->y - circle->radius){
-            circle->neg_height = true;
-            change_circle_color(circle);
-            add_new_ball();
-        }else if(circle->y_pos <= 0 + circle->radius){
-            circle->neg_height = false;
-            change_circle_color(circle);
-            add_new_ball();
-        }
-        if(circle->neg_height){
-            circle->y_pos -= circle->speed;
-        }else{
-            circle->y_pos += circle->speed;
-        }
 }
 
