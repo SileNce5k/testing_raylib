@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include <stdlib.h>
 #include "main.h"
+#include <assert.h>
 #define FPS 60
 #define REDTERM     "\033[31m"      /* Red */
 #define RESETTERM   "\033[0m"
@@ -66,7 +67,7 @@ void update_ball_position(Circle *circle, Vector2 *window_size)
             circle->y_pos -= circle->speed;
         }else{
             circle->y_pos += circle->speed;
-        }
+        }        
 }
 
 
@@ -75,7 +76,7 @@ Vector2 window_size;
 
 
 
-#define MAX_BALLS 262144 // 2^15
+#define MAX_BALLS  262144 * 4 //262144 // 2^15
 
 size_t amount_of_circles = 1;
 Circle array_of_circles[MAX_BALLS];
@@ -119,7 +120,7 @@ void DrawStar(Circle *circle)
     DrawPoly(center, 3, circle->radius, -90.0f, circle->color);
 }
 
-
+#define DARK_GREY (Color){50, 50, 50, 255}
 
 
 void draw_info(void)
@@ -127,7 +128,7 @@ void draw_info(void)
 // DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint);
     
     Color info_text_color = WHITE;
-    DrawRectangle(0, 0, 235, 90, GRAY);
+    DrawRectangle(0, 0, 235, 90, DARK_GREY);
     DrawTextEx(font, TextFormat("FPS: %i", GetFPS()), (Vector2){0, 0}, 20.0f, 1.0f, info_text_color);
     DrawText(TextFormat("Frametime: %f", GetFrameTime()), 0, 20, 20, info_text_color);
     DrawText(TextFormat("Generating: %s", enable_ball_generator? "true": "false"), 0, 40, 20, info_text_color);
@@ -138,7 +139,7 @@ void draw_item_info(void)
 {
     Vector2 position = {0, 90};
     Color item_info_color = WHITE;
-    DrawRectangle(position.x, position.y, 235, 135 , GRAY);
+    DrawRectangle(position.x, position.y, 235, 135 , DARK_GREY);
     DrawText(TextFormat("Balls: %i",     types.balls),       0, position.y +  0, 20, item_info_color);
     DrawText(TextFormat("Circles: %i",   types.circles),     0, position.y + 20, 20, item_info_color);
     DrawText(TextFormat("Squares: %i",   types.squares),     0, position.y + 40, 20, item_info_color);
@@ -153,26 +154,29 @@ int main(void)
     // font = LoadFont("whisper-regular.ttf");
     // printf("%i", IsFontReady(font));
 
-    window_size.x = 800;
-    window_size.y = 600;
+    window_size.x = 1280;
+    window_size.y = 720;
     char *window_title = "Ballz";
 
     SetTargetFPS(FPS);
-    int flags = FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_TOPMOST | FLAG_WINDOW_MAXIMIZED; // | FLAG_VSYNC_HINT;
+    int flags = FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_TOPMOST | FLAG_WINDOW_MAXIMIZED | FLAG_WINDOW_ALWAYS_RUN; // | FLAG_VSYNC_HINT;
     SetConfigFlags(flags);
     InitWindow(window_size.x, window_size.y, window_title);
-    InitWindow(window_size.x, window_size.y, window_title);
     int current_monitor = GetCurrentMonitor();
-    window_size.x = GetMonitorWidth(current_monitor);
-    window_size.y = GetMonitorHeight(current_monitor);
-    SetWindowSize(window_size.x, window_size.y);
-    ToggleFullscreen();
+    // window_size.x = GetMonitorWidth(current_monitor);
+    // window_size.y = GetMonitorHeight(current_monitor);
+    // SetWindowSize(window_size.x, window_size.y);
+    // ToggleFullscreen();
     array_of_circles[0] = initialize_ball(&window_size);
     bool enable_info_overlay = true;
     bool enable_item_info = true;
+    bool clear_background = true;
     
     while(!WindowShouldClose())
     {
+        if(IsKeyPressed(KEY_M)){
+            clear_background = !clear_background;
+        }
         if(IsKeyPressed(KEY_C)){
             amount_of_circles -= 1000;
         }
@@ -218,17 +222,18 @@ int main(void)
         window_size.x = GetScreenWidth();
         window_size.y = GetScreenHeight();
         BeginDrawing();
-            ClearBackground(BLACK);
+            if(clear_background)
+                ClearBackground(BLACK);
             for(int i = 0; i < amount_of_circles; i++){
                 // if(array_of_circles[i].type == BALL){
-                //     DrawCircle(array_of_circles[i].x_pos, array_of_circles[i].y_pos ,array_of_circles[i].radius, array_of_circles[i].color); 
                 // }else if(array_of_circles[i].type == CIRCLE){
                 //     DrawCircleLines(array_of_circles[i].x_pos, array_of_circles[i].y_pos ,array_of_circles[i].radius + 1, array_of_circles[i].color); 
                 // }else if(array_of_circles[i].type == RECTANGLE){
+                //     DrawRectangle(array_of_circles[i].x_pos, array_of_circles[i].y_pos, array_of_circles[i].radius , array_of_circles[i].radius , array_of_circles[i].color); 
                 // }else if(array_of_circles[i].type == STAR){
                 //     DrawStar(&array_of_circles[i]);
                 // }
-                    DrawRectangle(array_of_circles[i].x_pos, array_of_circles[i].y_pos, array_of_circles[i].radius , array_of_circles[i].radius , array_of_circles[i].color); 
+                    DrawCircle(array_of_circles[i].x_pos, array_of_circles[i].y_pos ,array_of_circles[i].radius, array_of_circles[i].color); 
 
             }
             
@@ -259,9 +264,9 @@ Circle initialize_ball(Vector2 *window_size)
     
     circle.neg_height = false;
     circle.neg_width = false;
-    circle.radius = GetRandomValue(2, 10);
-    circle.x_pos = GetRandomValue(1, window_size->x - circle.radius);
-    circle.y_pos = GetRandomValue(1, window_size->y - circle.radius);
+    circle.radius = GetRandomValue(1, 1);
+    circle.x_pos = GetRandomValue(1 + circle.radius, window_size->x - circle.radius);
+    circle.y_pos = GetRandomValue(1 + circle.radius, window_size->y - circle.radius);
     if(circle.x_pos > window_size->x / 2){
         circle.neg_width = true;
     }
