@@ -1,4 +1,5 @@
 #include "include/raylib.h"
+#include <string.h>
 #include "limits.h"
 #include "stdio.h"
 #include <stdlib.h>
@@ -139,34 +140,53 @@ void draw_item_info(void)
 {
     Vector2 position = {0, 90};
     Color item_info_color = WHITE;
+    int position_y = 20;
     DrawRectangle(position.x, position.y, 235, 135 , DARK_GREY);
-    DrawText(TextFormat("Balls: %i",     types.balls),       0, position.y +  0, 20, item_info_color);
-    DrawText(TextFormat("Circles: %i",   types.circles),     0, position.y + 20, 20, item_info_color);
-    DrawText(TextFormat("Squares: %i",   types.squares),     0, position.y + 40, 20, item_info_color);
-    DrawText(TextFormat("Stars: %i",     types.stars),       0, position.y + 60, 20, item_info_color);
-    DrawText(TextFormat("Total: %i",     amount_of_circles), 0, position.y + 80, 20, item_info_color);
-    DrawText(TextFormat("Max items: %i", MAX_BALLS),         0, position.y + 100, 20, item_info_color);
+    DrawText(TextFormat("Balls: %i",     types.balls),       0, position.y +  0, position_y, item_info_color);
+    DrawText(TextFormat("Circles: %i",   types.circles),     0, position.y + 20, position_y, item_info_color);
+    DrawText(TextFormat("Squares: %i",   types.squares),     0, position.y + 40, position_y, item_info_color);
+    DrawText(TextFormat("Stars: %i",     types.stars),       0, position.y + 60, position_y, item_info_color);
+    DrawText(TextFormat("Total: %i",     amount_of_circles), 0, position.y + 80, position_y, item_info_color);
+    DrawText(TextFormat("Max items: %i", MAX_BALLS),         0, position.y + 100, position_y, item_info_color);
 
 }
 Vector2 old_window = {800, 600};
-int main(void)
+int main(int argc, char **argv)
 {   
+
     // font = LoadFont("whisper-regular.ttf");
     // printf("%i", IsFontReady(font));
-
     window_size.x = 1280;
     window_size.y = 720;
     char *window_title = "Ballz";
-
+    bool start_in_fullscreen = false;
+    for(int i = 1; i < argc; i++){
+        printf("argv[%i]: %s\n" , i, argv[i]);
+        printf("REAL: %i\n", i);
+        if(strcmp(argv[i], "-w") == 0){
+            printf("it was true...%i\n", i);
+            window_size.x = atoi(argv[++i]);
+            printf("%i\n", i);
+            printf("window_size.x: %i\n", window_size.x);
+        }
+    }
+    return 0;
+    
+    
     SetTargetFPS(FPS);
     int flags = FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_TOPMOST | FLAG_WINDOW_MAXIMIZED | FLAG_WINDOW_ALWAYS_RUN; // | FLAG_VSYNC_HINT;
     SetConfigFlags(flags);
     InitWindow(window_size.x, window_size.y, window_title);
     int current_monitor = GetCurrentMonitor();
-    // window_size.x = GetMonitorWidth(current_monitor);
-    // window_size.y = GetMonitorHeight(current_monitor);
-    // SetWindowSize(window_size.x, window_size.y);
-    // ToggleFullscreen();
+    if(start_in_fullscreen){
+        window_size.x = GetMonitorWidth(current_monitor);
+        window_size.y = GetMonitorHeight(current_monitor);
+        SetWindowSize(window_size.x, window_size.y);
+        ToggleFullscreen();
+    
+    }else{
+        
+    }
     array_of_circles[0] = initialize_ball(&window_size);
     bool enable_info_overlay = true;
     bool enable_item_info = true;
@@ -194,7 +214,7 @@ int main(void)
         }
         if(IsKeyPressed(KEY_SPACE)){
             if(amount_of_circles < MAX_BALLS){
-                for(int i = 0;i <= 100 && amount_of_circles < MAX_BALLS; i++){
+                for(int i = 0;i <= 100 && amount_of_circles < MAX_BALLS && !enable_ball_eraser; i++){
                     add_new_ball();
                 }
                 printf("Amount of balls: %i\n", amount_of_circles);
