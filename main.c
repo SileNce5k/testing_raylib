@@ -336,7 +336,7 @@ Circle initialize_ball(Vector2 *window_size)
     if(circle.y_pos > window_size->y / 2){
         circle.neg_height = true;
     }
-    circle.speed =  GetRandomValue(1, 1);
+    circle.speed =  GetRandomValue(15, 20);
     Color color = {GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(200, 255)};
     Color color2 = ORANGE;
     circle.color = color;
