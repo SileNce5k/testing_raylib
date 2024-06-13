@@ -9,6 +9,7 @@ typedef enum  {
     RECTANGLE,
     STAR,
 } Type;
+void draw_frame(void);
 typedef struct
 {
     int x_pos;
@@ -20,6 +21,17 @@ typedef struct
     int speed;
     Type type;
 } Circle;
+
+typedef struct 
+{
+    bool enable_info_overlay;
+    bool enable_item_info;
+    bool clear_background;
+    bool enable_hotkeys_menu; 
+    bool enable_ball_generator;
+    bool enable_ball_eraser;
+} Bools;
+
 
 
 

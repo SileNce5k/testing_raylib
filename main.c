@@ -12,9 +12,7 @@
 void add_new_ball();
 
 
-bool enable_ball_generator = true;
-bool enable_ball_eraser = false;
-
+Bools bools = {true, true, true, true, true, false};
 
 Font font;
 
@@ -86,11 +84,11 @@ bool have_warned = false;
 void add_new_ball()
 {
         int current_fps = GetFPS();
-        if(amount_of_circles < MAX_BALLS && enable_ball_generator){
+        if(amount_of_circles < MAX_BALLS && bools.enable_ball_generator){
             array_of_circles[amount_of_circles] = initialize_ball(&window_size);
             amount_of_circles++;
             // printf("Amount of balls: %i\n", amount_of_circles);
-        }else if(enable_ball_eraser){
+        }else if(bools.enable_ball_eraser){
             switch (array_of_circles[amount_of_circles].type)
             {
             case BALL:
@@ -109,7 +107,7 @@ void add_new_ball()
             amount_of_circles--;
             
         }
-        else if(!have_warned && enable_ball_generator){
+        else if(!have_warned && bools.enable_ball_generator){
             printf(REDTERM "too many balls!!\n" RESETTERM);
             have_warned = true;
         }
@@ -133,8 +131,8 @@ void draw_info(void)
     DrawRectangle(0, 0, 235, 90, DARK_GREY);
     DrawTextEx(font, TextFormat("FPS: %i", GetFPS()), (Vector2){0, 0}, 20.0f, 1.0f, info_text_color);
     DrawText(TextFormat("Frametime: %f", GetFrameTime()), 0, 20, 20, info_text_color);
-    DrawText(TextFormat("Generating: %s", enable_ball_generator? "true": "false"), 0, 40, 20, info_text_color);
-    DrawText(TextFormat("Erasing: %s", enable_ball_eraser ? "true": "false"), 0, 60, 20, info_text_color);
+    DrawText(TextFormat("Generating: %s", bools.enable_ball_generator? "true": "false"), 0, 40, 20, info_text_color);
+    DrawText(TextFormat("Erasing: %s", bools.enable_ball_eraser ? "true": "false"), 0, 60, 20, info_text_color);
 }
 
 void draw_item_info(void)
@@ -171,8 +169,35 @@ void draw_epilespy_warning(Vector2 window_size)
 {
     DrawText(TextFormat("EPILEPSY WARNING!"),                                0, 200, 100, WHITE);
     DrawText(TextFormat("LEAVE THIS WEBSITE IF YOU SUFFER FROM EPILEPSY!"),  100, 400, 70, WHITE);
+    DrawText(TextFormat("test"),  0, 0, 70, WHITE);
 }
+
+
+void draw_tail(Circle *circle)
+{
+    int tail_length = 20;
+    int tail_width = 5;
+    Vector2 start_pos = {circle->x_pos + (window_size.x / 2), window_size.y / 2};
+    Vector2 end_pos = {1, 1};
+    if(circle->neg_width){
+        end_pos.x += tail_length;
+    }else{
+        end_pos.x -= tail_length;
+    }
+    if(circle->neg_height){
+        end_pos.y += tail_length;
+    }else{
+        end_pos.y -= tail_length;
+    }
+
+
+    DrawLineEx(start_pos, end_pos, circle->radius, circle->color);
+}
+
+
 Vector2 old_window = {800, 600};
+
+// the false is for the enable_ball_eraser, it is not enabled by default because generating and erasing can't be enabled at the same time
 int main(int argc, char **argv)
 {   
     printf("test\n");
@@ -209,49 +234,48 @@ int main(int argc, char **argv)
         
     }
     array_of_circles[0] = initialize_ball(&window_size);
-    bool enable_info_overlay = true;
-    bool enable_item_info = true;
-    bool clear_background = true;
-    bool enable_hotkeys_menu = true;
 
     // Get time in unix time
 
 
-    
+    #ifdef DPLATFORM_WEB
+        window_size.x = GetScreenWidth();
+        window_size.y = GetScreenHeight();
+    #endif
     
     while(!WindowShouldClose())
     {
         if(IsKeyPressed(KEY_M)){
-            clear_background = !clear_background;
+            bools.clear_background = !bools.clear_background;
         }
         if(IsKeyPressed(KEY_C)){
             amount_of_circles -= 1000;
         }
         if(IsKeyPressed(KEY_E)){
-            enable_ball_generator = !enable_ball_generator;
-            if(enable_ball_generator){
-                enable_ball_eraser = !enable_ball_generator;
+            bools.enable_ball_generator = !bools.enable_ball_generator;
+            if(bools.enable_ball_generator){
+                bools.enable_ball_eraser = !bools.enable_ball_generator;
             }
         }
         if(IsKeyPressed(KEY_R)){
-            enable_ball_eraser = !enable_ball_eraser;
-            if(enable_ball_eraser){
-                enable_ball_generator = !enable_ball_eraser;
+            bools.enable_ball_eraser = !bools.enable_ball_eraser;
+            if(bools.enable_ball_eraser){
+                bools.enable_ball_generator = !bools.enable_ball_eraser;
             }
         }
         if(IsKeyPressed(KEY_SPACE)){
             if(amount_of_circles < MAX_BALLS){
-                for(int i = 0;i <= 100 && amount_of_circles < MAX_BALLS && !enable_ball_eraser; i++){
+                for(int i = 0;i <= 100 && amount_of_circles < MAX_BALLS && !bools.enable_ball_eraser; i++){
                     add_new_ball();
                 }
-                printf("Amount of balls: %i\n", amount_of_circles);
+                printf("Amount of balls: %zu\n", amount_of_circles);
             }
         }
         if(IsKeyPressed(KEY_I)){
-            enable_info_overlay = !enable_info_overlay;
+            bools.enable_info_overlay = !bools.enable_info_overlay;
         }
         if(IsKeyPressed(KEY_L)){
-            enable_item_info = !enable_item_info;
+            bools.enable_item_info = !bools.enable_item_info;
         }
         if(IsKeyPressed(KEY_F)){
             if(!IsWindowFullscreen()){
@@ -267,48 +291,22 @@ int main(int argc, char **argv)
             }
         }
         if(IsKeyPressed(KEY_H)){
-            enable_hotkeys_menu = !enable_hotkeys_menu;
+            bools.enable_hotkeys_menu = !bools.enable_hotkeys_menu;
         }
         window_size.x = GetScreenWidth();
         window_size.y = GetScreenHeight();
-        while (3 > GetTime())
+        #ifdef DPLATFORM_WEB
+            window_size.x = GetScreenWidth();
+            window_size.y = GetScreenHeight();
+        while (5 > GetTime())
         {
             BeginDrawing();
                 ClearBackground(BLACK);
                 draw_epilespy_warning(window_size);
             EndDrawing();
         }
-        BeginDrawing();
-            if(clear_background)
-                ClearBackground(BLACK);
-            for(int i = 0; i < amount_of_circles; i++){
-                //if(array_of_circles[i].type == BALL){
-                //   DrawCircle(array_of_circles[i].x_pos, array_of_circles[i].y_pos ,array_of_circles[i].radius, array_of_circles[i].color); 
-                //}else if(array_of_circles[i].type == CIRCLE){
-                //    DrawCircleLines(array_of_circles[i].x_pos, array_of_circles[i].y_pos ,array_of_circles[i].radius + 1, array_of_circles[i].color); 
-                /*}else */if(array_of_circles[i].type == RECTANGLE){
-                    DrawRectangle(array_of_circles[i].x_pos, array_of_circles[i].y_pos, array_of_circles[i].radius , array_of_circles[i].radius , array_of_circles[i].color);
-                }else if(array_of_circles[i].type == STAR){
-                    DrawStar(&array_of_circles[i]);
-                }else{
-                    DrawRectangle(array_of_circles[i].x_pos, array_of_circles[i].y_pos, array_of_circles[i].radius , array_of_circles[i].radius , array_of_circles[i].color); 
-
-                }
-
-            }
-            
-            if(enable_info_overlay){
-                draw_info();
-            }else{
-                DrawFPS(0, 0);
-            }
-            if(enable_item_info){
-                draw_item_info();
-            }
-            if(enable_hotkeys_menu){
-                draw_hotkeys_info();
-            }
-        EndDrawing();
+        #endif
+        draw_frame();
         for(int i = 0; i < amount_of_circles; i++)
             update_ball_position(&array_of_circles[i], &window_size);
     }
@@ -317,7 +315,41 @@ int main(int argc, char **argv)
     return 0;
 }
 
+void draw_frame(void)
+{
+        BeginDrawing();
+            if(bools.clear_background)
+                ClearBackground(BLACK);
+            for(int i = 0; i < amount_of_circles; i++){
+                //if(array_of_circles[i].type == BALL){
+                //   DrawCircle(array_of_circles[i].x_pos, array_of_circles[i].y_pos ,array_of_circles[i].radius, array_of_circles[i].color); 
+                //}else if(array_of_circles[i].type == CIRCLE){
+                //    DrawCircleLines(array_of_circles[i].x_pos, array_of_circles[i].y_pos ,array_of_circles[i].radius + 1, array_of_circles[i].color); 
+                // /*}else */if(array_of_circles[i].type == RECTANGLE){
+                //     DrawRectangle(array_of_circles[i].x_pos, array_of_circles[i].y_pos, array_of_circles[i].radius , array_of_circles[i].radius , array_of_circles[i].color);
+                // }else if(array_of_circles[i].type == STAR){
+                //     DrawStar(&array_of_circles[i]);
+                // }else{
+                //     DrawRectangle(array_of_circles[i].x_pos, array_of_circles[i].y_pos, array_of_circles[i].radius , array_of_circles[i].radius , array_of_circles[i].color); 
 
+                // }
+                draw_tail(&array_of_circles[i]);
+
+            }
+            
+            if(bools.enable_info_overlay){
+                draw_info();
+            }else{
+                DrawFPS(0, 0);
+            }
+            if(bools.enable_item_info){
+                draw_item_info();
+            }
+            if(bools.enable_hotkeys_menu){
+                draw_hotkeys_info();
+            }
+        EndDrawing();
+}
 
 
 Circle initialize_ball(Vector2 *window_size)
@@ -336,7 +368,7 @@ Circle initialize_ball(Vector2 *window_size)
     if(circle.y_pos > window_size->y / 2){
         circle.neg_height = true;
     }
-    circle.speed =  GetRandomValue(15, 20);
+    circle.speed =  GetRandomValue(8, 10);
     Color color = {GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(200, 255)};
     Color color2 = ORANGE;
     circle.color = color;
